@@ -7,9 +7,9 @@ public class BlackJack {
 	ArrayList<Card> deckList = new ArrayList<>();
 	ArrayList<Player> plaList = new ArrayList<>();
 	int decks;
-	int defBal;// 默认余额
+	double defBal;// 默认余额
 	boolean[] button = new boolean[5];// 控制按钮的活性
-	int PID = 1;// 当前玩家编号
+	int PID;// 当前玩家编号
 
 	public BlackJack(int d, int p, int b) {
 		decks = d;
@@ -19,12 +19,10 @@ public class BlackJack {
 		}
 		refreshUI();
 		loadCards();
-		button[4] = true;
 		activateMouse();
 	}
 
 	public void refreshUI() {
-		UI.clearGraphics();
 		UI.drawImage("img/1350.jpg", 0, 0);
 		UI.drawImage("img/dealer.png", 300, 25, 180, 240);
 		UI.drawImage("img/button.png", 200, 780);// 图片分辨率128*65
@@ -47,9 +45,9 @@ public class BlackJack {
 		UI.drawRect(390, 550, 134, 196);
 		UI.drawRect(690, 550, 134, 196);
 		UI.drawRect(990, 550, 134, 196);
-//		UI.drawRect(0, 0, 1350, 900);
 		displayCard();
 		UI.setColor(new Color(255, 255, 145));
+		UI.drawString("Click Me", 370, 300);
 		UI.drawString("$: "+defBal, 1000, 50);
 		UI.drawImage("img/indicator.png", (PID-1)*300+50, 632, 30, 30);
 	}
@@ -80,19 +78,18 @@ public class BlackJack {
 
 	public void checkButton(String action, double x, double y) {
 		if (action.equals("clicked")) {
-			UI.println(x+" "+y);
+//			UI.println(x+" "+y);
 			if (x > 200 && x < 328 && y > 780 && y < 845 && button[0]) {// 相应的按钮需要在激活状态才有反应
 				stand();
 			} else if (x > 428 && x < 556 && y > 780 && y < 845 && button[1]) {
 				hit();
-//				UI.removeMouseListener();
 			} else if (x > 656 && x < 784 && y > 780 && y < 845 && button[2]) {
 				doubleBet();
-				UI.println("Double");
+//				UI.println("Double");
 			} else if (x > 884 && x < 1012 && y > 780 && y < 845 && button[3]) {
 				UI.println("Split");
 			} else if (x > 300 && x < 480 && y > 25 && y < 265 && button[4]) {
-				UI.println("New Round");
+//				UI.println("New Round");
 				refreshUI();
 				newRound();
 			} else if (x > 80 && x < 1033 && y > 460 && y < 500 && button[4]) {
@@ -118,16 +115,19 @@ public class BlackJack {
 				}
 			}
 		}
+		button[4] = true;
 	}
 
 	public void newRound() {
 		for (Player p : plaList) {
 			p.resetHand();
 		}
-		PID = 1;
+//		defBal = defBal-p.bet;
+		defBal -= 400;// 把deal减下去的加回来
 		refreshUI();
 		activateMouse();
 		dealInitialCard();
+		PID = 1;
 		while (plaList.get(PID).status.equals("Black Jack")) {
 			if (PID < plaList.size()-1) {
 				PID++;
@@ -191,7 +191,7 @@ public class BlackJack {
 		}
 	}
 
-	public void doubleBet() {
+	public void doubleBet() {// 要考虑余额不足
 		plaList.get(PID).bet *= 2;
 		plaList.get(PID).addCard(drawCard());
 		refreshUI();// displayCard() replaced
@@ -206,10 +206,11 @@ public class BlackJack {
 	}
 
 	public void stand() {
-		button[2]=true;
-		refreshUI();
+		button[2] = true;
 		if (PID < plaList.size()-1) {
-			PID++;
+			do {
+				PID++;
+			} while (plaList.get(PID).status.equals("Black Jack"));
 			refreshUI();
 		} else {// 全部玩家执行完毕
 			dealerAction();
@@ -230,35 +231,37 @@ public class BlackJack {
 		UI.println("dear's hand: ");// 测试用
 		plaList.get(0).printHand();// 测试用
 		UI.println(plaList.get(0).bestHand());
-		int income = 0;
+		double income = 0;
+		double totalBet=0;
 		for (int p = 1; p < plaList.size(); p++) {// 判定输赢
+			totalBet+=plaList.get(p).bet;
 			if (plaList.get(p).bestHand() > plaList.get(0).bestHand()) {
 				UI.println("player "+p+" wins");
 				UI.setColor(Color.red);
 				UI.drawString("Win", (p-1)*300+210, 533);
 				if (plaList.get(p).status.equals("Black Jack"))
-					income += plaList.get(p).bet*1.5;// BJ1.5倍赔率
-				income += plaList.get(p).bet;
+					income += plaList.get(p).bet*2.5;// BJ1.5倍赔率
+				income += plaList.get(p).bet*2;
 			}
 			if (plaList.get(p).bestHand() < plaList.get(0).bestHand() || plaList.get(p).bestHand() == 0) {// 比庄家小，或者爆掉。跟庄家一起爆掉算玩家输。
 				UI.setColor(Color.green);
 				UI.drawString("Lose", (p-1)*300+210, 533);
 				UI.println("player "+p+" lose");
-				income -= plaList.get(p).bet;
+				
 			} else if (plaList.get(p).bestHand() == plaList.get(0).bestHand()) {// 有问题
 				UI.println("player "+p+" draw");
 				UI.setColor(Color.white);
 				UI.drawString("Push", (p-1)*300+210, 533);
+				income -= plaList.get(p).bet;
 			}
-//			plaList.get(p).printHand();
 		}
 		defBal += income;
 		if (income > 0) {
 			UI.setColor(Color.red);
-			UI.drawString("+"+income, 1027, 80);
+			UI.drawString("+"+(income-totalBet), 1027, 80);
 		} else if (income < 0) {
 			UI.setColor(Color.green);
-			UI.drawString(""+income, 1027, 80);
+			UI.drawString(""+(income-totalBet), 1027, 80);
 		}
 		tryAgain();
 	}
@@ -267,8 +270,8 @@ public class BlackJack {
 		if (defBal > 0) {
 			boolean[] butStat = { false, false, false, false, true };
 			button = butStat;
-			for(Player p:plaList){
-				p.bet=100;
+			for (Player p : plaList) {
+				p.bet = 100;
 			}
 			UI.setColor(new Color(255, 255, 145));
 			UI.drawString("Click Me", 370, 300);
@@ -283,7 +286,7 @@ public class BlackJack {
 	public static void main(String[] args) {
 		int decks = 4;
 		int players = 4;
-		int balance = 2000;
+		int balance = 5000;
 		new BlackJack(decks, players, balance);
 	}
 }
