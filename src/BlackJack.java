@@ -13,7 +13,7 @@ public class BlackJack {
 
 	public BlackJack(int d, int p, int b) {
 		decks = d;
-		defBal = b;
+		defBal = b-100*p;
 		for (int i = 0; i < p+1; i++) {// dealer也作为player，所以p+1
 			plaList.add(new Player("Player "+(i)));
 		}
@@ -123,7 +123,7 @@ public class BlackJack {
 			p.resetHand();
 		}
 //		defBal = defBal-p.bet;
-		defBal -= 400;// 把deal减下去的加回来
+//		defBal -= 400;// 把deal减下去的加回来
 		refreshUI();
 		activateMouse();
 		dealInitialCard();
@@ -208,9 +208,9 @@ public class BlackJack {
 	public void stand() {
 		button[2] = true;
 		if (PID < plaList.size()-1) {
-			do {
-				PID++;
-			} while (plaList.get(PID).status.equals("Black Jack"));
+			PID++;
+			if (plaList.get(PID).status.equals("Black Jack"))
+				stand();
 			refreshUI();
 		} else {// 全部玩家执行完毕
 			dealerAction();
@@ -232,36 +232,34 @@ public class BlackJack {
 		plaList.get(0).printHand();// 测试用
 		UI.println(plaList.get(0).bestHand());
 		double income = 0;
-		double totalBet=0;
 		for (int p = 1; p < plaList.size(); p++) {// 判定输赢
-			totalBet+=plaList.get(p).bet;
 			if (plaList.get(p).bestHand() > plaList.get(0).bestHand()) {
 				UI.println("player "+p+" wins");
 				UI.setColor(Color.red);
 				UI.drawString("Win", (p-1)*300+210, 533);
 				if (plaList.get(p).status.equals("Black Jack"))
-					income += plaList.get(p).bet*2.5;// BJ1.5倍赔率
-				income += plaList.get(p).bet*2;
+					income += plaList.get(p).bet*1.5;// BJ1.5倍赔率
+				else income += plaList.get(p).bet;
 			}
 			if (plaList.get(p).bestHand() < plaList.get(0).bestHand() || plaList.get(p).bestHand() == 0) {// 比庄家小，或者爆掉。跟庄家一起爆掉算玩家输。
 				UI.setColor(Color.green);
 				UI.drawString("Lose", (p-1)*300+210, 533);
 				UI.println("player "+p+" lose");
-				
+				income -= plaList.get(p).bet;
 			} else if (plaList.get(p).bestHand() == plaList.get(0).bestHand()) {// 有问题
-				UI.println("player "+p+" draw");
+				UI.println("player "+p+" push");
 				UI.setColor(Color.white);
 				UI.drawString("Push", (p-1)*300+210, 533);
-				income -= plaList.get(p).bet;
+//				income = plaList.get(p).bet;
 			}
 		}
 		defBal += income;
-		if (income > 0) {
+		if (income> 0) {
 			UI.setColor(Color.red);
-			UI.drawString("+"+(income-totalBet), 1027, 80);
-		} else if (income < 0) {
+			UI.drawString("+"+(income), 1027, 80);
+		} else if (income< 0) {
 			UI.setColor(Color.green);
-			UI.drawString(""+(income-totalBet), 1027, 80);
+			UI.drawString(""+(income), 1027, 80);
 		}
 		tryAgain();
 	}
