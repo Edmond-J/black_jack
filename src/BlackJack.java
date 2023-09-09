@@ -45,7 +45,6 @@ public class BlackJack {
 		UI.drawString("Round: "+round, 1150, 50);
 		plaList.get(PID).drawIndicator();
 //		UI.drawImage("img/indicator.png", (PID-1)*300+50, 632, 30, 30);
-//		UI.drawImage("D:\\1.jpg", 0, 0);
 	}
 
 	public void refreshButton() {
@@ -82,20 +81,16 @@ public class BlackJack {
 
 	public void checkButton(String action, double x, double y) {
 		if (action.equals("clicked")) {
-			UI.println(x+" "+y);
+//			UI.println(x+" "+y);
 			if (x > 200 && x < 328 && y > 780 && y < 845 && button[0]) {// 相应的按钮需要在激活状态才有反应
 				stand();
 			} else if (x > 428 && x < 556 && y > 780 && y < 845 && button[1]) {
 				hit();
 			} else if (x > 656 && x < 784 && y > 780 && y < 845 && button[2]) {
 				doubleBet();
-//				UI.println("Double");
 			} else if (x > 884 && x < 1012 && y > 780 && y < 845 && button[3]) {
 				split();
-				UI.println("Split");
 			} else if (x > 320 && x < 470 && y > 45 && y < 245 && button[4]) {
-//				UI.println("New Round");
-//				refreshUI();
 				newRound();
 			} else if (x > 80 && x < 1033 && y > 460 && y < 500 && button[4]) {
 				placeBet((int)x, (int)y);
@@ -147,22 +142,24 @@ public class BlackJack {
 		activateMouse();
 		dealInitialCard();
 		PID = 1;
-		while (plaList.get(PID).status.equals("Black Jack")) {
-			if (PID < plaList.size()-1) {
-				PID++;
-				refreshUI();
-			}
+		while (plaList.get(PID).status.equals("Black Jack") && PID < plaList.size()-1) {
+			PID++;
+			refreshUI();
 		}
+		if (PID == plaList.size()-1)
+			dealerAction();
 		// black jack之后的动作？？
-		if (plaList.get(PID).checkPair()) {
-			boolean[] butStat = { true, true, true, true, false };
-			button = butStat;
-		} else {
-			boolean[] butStat = { true, true, true, false, false };
-			button = butStat;
+		else {
+			if (plaList.get(PID).checkPair()) {
+				boolean[] butStat = { true, true, true, true, false };
+				button = butStat;
+			} else {
+				boolean[] butStat = { true, true, true, false, false };
+				button = butStat;
+			}
+			refreshUI();
+			activateMouse();// 如何把p传进去？
 		}
-		refreshUI();
-		activateMouse();// 如何把p传进去？
 	}
 
 	public void dealInitialCard() {
@@ -172,6 +169,10 @@ public class BlackJack {
 					Card nextCard = drawCard();
 					if (p == 0 && i == 1)// dealer的第二张牌要盖住
 						nextCard.fold = true;
+//					if (i == 0)// 测试用，手动输入所需要的牌
+//						nextCard.rank = 10;
+//					if (i == 1)
+//						nextCard.rank = 1;
 					plaList.get(p).addCard(nextCard);
 					refreshUI();
 					UI.sleep(300);
@@ -205,12 +206,14 @@ public class BlackJack {
 			// refreshUI();
 			if (plaList.get(PID).status.equals("Black Jack"))
 				stand();
-			else if (plaList.get(PID).checkPair())
-				button[3] = true;
-			else button[3] = false;
-			button[2] = true;
-			refreshUI();
-			activateMouse();
+			else {
+				if (plaList.get(PID).checkPair())
+					button[3] = true;
+				else button[3] = false;
+				button[2] = true;
+				refreshUI();
+				activateMouse();
+			}
 		} else {// 全部玩家执行完毕
 			dealerAction();
 		}
@@ -243,12 +246,10 @@ public class BlackJack {
 			refreshUI();
 			dealHand = plaList.get(0).bjPoints();
 		}
-		UI.println("dear's hand: ");// 测试用
 		plaList.get(0).printHand();// 测试用
-		UI.println(plaList.get(0).bestHand());
 		double income = 0;
 		for (int p = 1; p < plaList.size(); p++) {// 判定输赢
-			income += plaList.get(p).result(plaList.get(0).bestHand());//把dealer的牌传进去，计算出每个玩家的输赢情况
+			income += plaList.get(p).result(plaList.get(0).bestHand());// 把dealer的牌传进去，计算出每个玩家的输赢情况
 		}
 		defBal += income;
 		if (income > 0) {
