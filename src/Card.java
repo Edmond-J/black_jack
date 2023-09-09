@@ -3,14 +3,16 @@ public class Card {
 	int rank;
 	int deck;
 	String symbol;
-	String cardName;
 	boolean fold;
 
 	public Card(Suit suit, int rank, int deck) {
-		this.suit=suit;
-		this.rank=rank;
-		this.deck=deck;
-		this.cardName=suit+"_"+rank+".png";
+		this.suit = suit;
+		this.rank = rank;
+		this.deck = deck;
+	}
+
+	public String cardName() {
+		return suit+"_"+rank+".png";
 	}
 
 	@Override
