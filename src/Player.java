@@ -6,9 +6,9 @@ import ecs100.UI;
 public class Player {
 	String name;
 	int balance;
-	int seat;
-	int x;
-	int y;
+	private int seat;
+	private int x;
+	private int y;
 	double bet;
 	String status;
 	ArrayList<Card> handList;
@@ -17,7 +17,7 @@ public class Player {
 	public Player(int s) {
 		this.seat = s;
 		x = 300*(s-1)+90;
-		y = 550;
+		y = 600;
 		bet = 100;
 		status = "";
 		handList = new ArrayList<>();
@@ -26,7 +26,7 @@ public class Player {
 	public Player(int s, double b) {
 		seat = s;
 		x = 300*(s-1)+90;
-		y = 250;
+		y = 300;
 		bet = b;
 		status = "";
 		handList = new ArrayList<>();
@@ -93,8 +93,10 @@ public class Player {
 			UI.drawImage(cardFile, x+i*30, y);
 			UI.drawString(status, x-8, y-18);// 手牌状态
 		}
-		UI.drawImage("img/chip.png", x-8, 460);// 分辨率40*40
-		UI.drawString(""+bet, x+72, 488);
+		UI.drawImage("img/chip.png", x-8, 510);// 分辨率40*40
+		if (split == false)
+			UI.drawString(""+(int)bet, x+60, 538);
+		else UI.drawString("+"+(int)bet, x+120, 538);
 	}
 
 	public void drawIndicator() {
