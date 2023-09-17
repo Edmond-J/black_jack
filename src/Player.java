@@ -9,7 +9,7 @@ public class Player {
 	private int seat;
 	private int x;
 	private int y;
-	double bet;
+	int bet;
 	String status;
 	ArrayList<Card> handList;
 	boolean split;
@@ -23,7 +23,7 @@ public class Player {
 		handList = new ArrayList<>();
 	}
 
-	public Player(int s, double b) {
+	public Player(int s, int b) {
 		seat = s;
 		x = 300*(s-1)+90;
 		y = 300;
@@ -95,8 +95,8 @@ public class Player {
 		}
 		UI.drawImage("img/chip.png", x-8, 510);// 分辨率40*40
 		if (split == false)
-			UI.drawString(""+(int)bet, x+60, 538);
-		else UI.drawString("+"+(int)bet, x+120, 538);
+			UI.drawString(""+bet, x+60, 538);
+		else UI.drawString("+"+bet, x+120, 538);
 	}
 
 	public void drawIndicator() {

@@ -1,4 +1,0 @@
-players: 4
-balance: 7350.0
-round:  31
-record: 7350.0

@@ -13,8 +13,8 @@ public class BlackJack {
 	int decks = 6;
 	int players;
 	int round;
-	double balance;
-	double hiRecord;
+	int balance;
+	int hiRecord;
 	boolean[] button = new boolean[5];// 控制按钮的活性
 	int PID;// 当前玩家编号
 
@@ -39,19 +39,25 @@ public class BlackJack {
 	}
 
 	public void loadProfile() {
-		try {
-			Scanner sc = new Scanner(new File("save/save.txt"));
-			sc.next();
-			players = sc.nextInt();
-			sc.next();
-			balance = sc.nextDouble();
-			sc.next();
-			round = sc.nextInt();
-			sc.next();
-			hiRecord = sc.nextDouble();
-			sc.close();
-		} catch (IOException e) {
-			UI.println("Error: "+e);
+		File save = new File("save/save.txt");
+		if (save.exists()) {
+			try {
+				Scanner sc = new Scanner(new File("save/save.txt"));
+				sc.next();
+				players = sc.nextInt();
+				sc.next();
+				balance = sc.nextInt();
+				sc.next();
+				round = sc.nextInt();
+				sc.next();
+				hiRecord = sc.nextInt();
+				sc.close();
+			} catch (IOException e) {
+				UI.println("Error: "+e);
+			}
+		} else {
+			players = 4;
+			balance = 4600;
 		}
 	}
 
@@ -66,6 +72,7 @@ public class BlackJack {
 		UI.drawString("Double", 681, 855);
 		UI.drawString("Split", 924, 855);
 		UI.setColor(new Color(158, 78, 53));
+		UI.drawRect(540, 50, 134, 196);
 		UI.drawRect(90, 600, 134, 196);
 		UI.drawRect(390, 600, 134, 196);
 		UI.drawRect(690, 600, 134, 196);
@@ -73,9 +80,10 @@ public class BlackJack {
 		displayCard();
 		UI.setColor(new Color(255, 255, 145));
 		UI.drawString("Deal", 395, 245);
+		UI.drawString("Record: "+hiRecord, 850, 50);
 		UI.drawString("$: "+balance, 1050, 50);
 		UI.drawString("Round: "+round, 1200, 50);
-//		UI.drawString(""+deckList.size(), 100, 50);
+		UI.drawString(""+deckList.size(), 100, 50);
 		plaList.get(PID).drawIndicator();
 //		UI.drawImage("img/indicator.png", (PID-1)*300+50, 632, 30, 30);
 	}
@@ -152,14 +160,12 @@ public class BlackJack {
 
 	public void placeBet(int x, int y) {
 		for (int p = 1; p < plaList.size(); p++) {
-			if (x > (p-1)*300+82 && x < (p-1)*300+122 && y > 510 && y < 550) {
+			if (x > (p-1)*300+82 && x < (p-1)*300+122 && y > 510 && y < 550 && plaList.get(p).bet < 500) {
 				plaList.get(p).bet += 100;
+				balance -= 100;
 			}
 		}
 		refreshUI();
-		// boolean[] butStat = { false, false, false, false, false };
-		// button = butStat;
-		// activateMouse();
 	}
 
 	public void newRound() {
@@ -167,6 +173,7 @@ public class BlackJack {
 		for (int i = 0; i < plaList.size(); i++) {
 			plaList.get(i).resetHand();// 手牌清空
 			if (plaList.get(i).split) {
+				balance += plaList.get(i).bet;
 				plaList.remove(i);// 把原来分裂出来的player移除掉
 				i--;
 			}
@@ -196,26 +203,26 @@ public class BlackJack {
 	}
 
 	public void dealInitialCard() {
-		if (deckList.size() > 26) {// 少于26张就重新洗牌
-			for (int i = 0; i < 2; i++) {
-				for (int p = 0; p < plaList.size(); p++) {// p0代表dealer
-					Card nextCard = drawCard();
-					if (p == 0 && i == 1)// dealer的第二张牌要盖住
-						nextCard.fold = true;
+		if (deckList.size() < 52) {// 少于52张就重新洗牌
+			UI.println("Cards reloading");
+			deckList = new ArrayList<Card>();
+			loadCards();
+//			dealInitialCard();
+//			return;
+		}
+		for (int i = 0; i < 2; i++) {
+			for (int p = 0; p < plaList.size(); p++) {// p0代表dealer
+				Card nextCard = drawCard();
+				if (p == 0 && i == 1)// dealer的第二张牌要盖住
+					nextCard.fold = true;
 //					if (p == 1 && i == 0)// 测试用，手动输入所需要的牌
 //					nextCard.rank = 10;
 //					if (p == 1 && i == 1)
 //					nextCard.rank = 11;
-					plaList.get(p).addCard(nextCard);
-					refreshUI();
-					UI.sleep(300);
-				}
+				plaList.get(p).addCard(nextCard);
+				refreshUI();
+				UI.sleep(300);
 			}
-		} else {
-			UI.println("Cards reloading");
-			deckList = new ArrayList<Card>();
-			loadCards();
-			dealInitialCard();
 		}
 	}
 
@@ -234,25 +241,26 @@ public class BlackJack {
 	}
 
 	public void stand() {
-		if (PID < plaList.size()-1) {
-			PID++;
-			// refreshUI();
-			if (plaList.get(PID).status.equals("Black Jack"))
-				stand();
-			else {
-				if (plaList.get(PID).checkPair() && plaList.get(PID).split == false)// 分裂出来的牌不能继续分裂
-					button[3] = true;
-				else button[3] = false;
-				button[2] = true;
-				refreshUI();
-				activateMouse();
-			}
-		} else {// 全部玩家执行完毕
+		if (PID >= plaList.size()-1) {
 			dealerAction();
+			return;
 		}
+		PID++;
+		// refreshUI();
+		if (plaList.get(PID).status.equals("Black Jack")) {
+			stand();
+			return;
+		}
+		if (plaList.get(PID).checkPair() && plaList.get(PID).split == false)// 分裂出来的牌不能继续分裂
+			button[3] = true;
+		else button[3] = false;
+		button[2] = true;
+		refreshUI();
+		activateMouse();
 	}
 
 	public void doubleBet() {// 要考虑余额不足
+		balance -= plaList.get(PID).bet;
 		plaList.get(PID).bet *= 2;
 		plaList.get(PID).addCard(drawCard());
 		refreshUI();
@@ -260,6 +268,7 @@ public class BlackJack {
 	}
 
 	public void split() {
+		balance -= plaList.get(PID).bet;
 		Card ca = drawCard();
 		Card cb = drawCard();
 		Player newPlayer = plaList.get(PID).splitHand(ca, cb);
@@ -288,7 +297,7 @@ public class BlackJack {
 			dealHand = plaList.get(0).bjPoints();
 		}
 		plaList.get(0).printHand();// 测试用
-		double income = 0;
+		int income = 0;
 		for (int p = 1; p < plaList.size(); p++) {// 判定输赢
 			income += plaList.get(p).result(plaList.get(0).bestHand());// 把dealer的牌传进去，计算出每个玩家的输赢情况
 		}
@@ -296,9 +305,11 @@ public class BlackJack {
 		if (balance > hiRecord)
 			hiRecord = balance;
 		if (income > 0) {
+//			refreshUI();
 			UI.setColor(Color.red);
 			UI.drawString("+"+(income), 1077, 80);
 		} else if (income < 0) {
+//			refreshUI();
 			UI.setColor(Color.green);
 			UI.drawString(""+(income), 1077, 80);
 		}
@@ -308,7 +319,7 @@ public class BlackJack {
 	public void tryAgain() {// reset user bet
 		try {
 			PrintStream out = new PrintStream(new File("save/save.txt"));
-			out.println("players: "+(plaList.size()-1));
+			out.println("players: "+players);
 			out.println("balance: "+balance);
 			out.println("round:  "+round);
 			out.println("record: "+hiRecord);
@@ -321,6 +332,7 @@ public class BlackJack {
 			button = butStat;
 			PID = 0;
 			for (Player p : plaList) {
+				balance += p.bet-100;
 				p.bet = 100;
 			}
 			UI.drawString(plaList.get(0).status, 600, 280);// plaList.get(0).status
