@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 import ecs100.UI;
 
-public class BlackJack {
+public class BlackJack_Main {
 	ArrayList<Card> deckList = new ArrayList<>();
 	ArrayList<Player> plaList = new ArrayList<>();
 	int decks = 6;
@@ -18,12 +18,12 @@ public class BlackJack {
 	boolean[] button = new boolean[5];// 控制按钮的活性
 	int PID;// 当前玩家编号
 
-	public BlackJack() {
+	public BlackJack_Main() {
 		loadProfile();
 		initialize();
 	}
 
-	public BlackJack(int p, int b) {
+	public BlackJack_Main(int p, int b) {
 		players = p;
 		balance = b-100*p;
 		initialize();
@@ -39,10 +39,10 @@ public class BlackJack {
 	}
 
 	public void loadProfile() {
-		File save = new File("save/save.txt");
+		File save = new File("data/save-black_jack.txt");
 		if (save.exists()) {
 			try {
-				Scanner sc = new Scanner(new File("save/save.txt"));
+				Scanner sc = new Scanner(new File("data/save-black_jack.txt"));
 				sc.next();
 				players = sc.nextInt();
 				sc.next();
@@ -178,6 +178,8 @@ public class BlackJack {
 				i--;
 			}
 		}
+		if (balance > hiRecord)
+			hiRecord = balance;
 		refreshUI();
 		activateMouse();
 		dealInitialCard();
@@ -302,8 +304,7 @@ public class BlackJack {
 			income += plaList.get(p).result(plaList.get(0).bestHand());// 把dealer的牌传进去，计算出每个玩家的输赢情况
 		}
 		balance += income;
-		if (balance > hiRecord)
-			hiRecord = balance;
+
 		if (income > 0) {
 //			refreshUI();
 			UI.setColor(Color.red);
@@ -318,7 +319,7 @@ public class BlackJack {
 
 	public void tryAgain() {// reset user bet
 		try {
-			PrintStream out = new PrintStream(new File("save/save.txt"));
+			PrintStream out = new PrintStream(new File("data/save-black_jack.txt"));
 			out.println("players: "+players);
 			out.println("balance: "+balance);
 			out.println("round:  "+round);
@@ -351,6 +352,6 @@ public class BlackJack {
 	}
 
 	public static void main(String[] args) {
-		new BlackJack();
+		new BlackJack_Main();
 	}
 }
