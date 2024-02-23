@@ -1,4 +1,4 @@
-# <font color=mediumaquamarine>Tetris </font>
+# <font color=mediumaquamarine>Black Jack </font>
 ## Introduction:
 This is a personal project driven purely by interest.  
 Blackjack is a classic casino game, and you can find the game introduction in the link below:  
@@ -13,9 +13,6 @@ Have fun!
 ## Snapshot
 <img src="screenshot/ui-1.png" width="700px"> 
 
-## Features
-- 
-
 ## Tech Stack 
 | Type | Name |
 | ----------- | ----------- 
@@ -23,14 +20,14 @@ Have fun!
 | GUI Library | ecs100.jar |
 
 ## Run Instruction
->### Requirement:
->- Java Runtime Environment
->
->### Steps:   
->To run the source code in development environment, please follow the steps below:
->1. Clone the repository from the GitHub
->2. Add ecs100.jar to Build Path
->3. Run the *BlackJack_Main.java* in the default package.
+### Requirement:
+- Java Runtime Environment
+
+### Steps:   
+To run the source code in development environment, please follow the steps below:
+1. Clone the repository from the GitHub
+2. Add ecs100.jar to Build Path
+3. Run the *BlackJack_Main.java* in the default package.
 
 ## License
 MIT
